@@ -2,8 +2,6 @@
 
 ## load programs
 pacman::p_load(rio, tidyverse, stringr, haven, reshape2, grid, gridExtra, dplyr, ggplot2, epiDisplay, readxl, multcomp, plm)
-setwd("~/")
-setwd("Desktop/Effort Specialization/Data")
 
 # ---- Load and Clean Data ----
 
@@ -11,30 +9,30 @@ setwd("Desktop/Effort Specialization/Data")
 # these files are web pages with the data, saved as text files
 # See https://www.census.gov/programs-surveys/susb/data/datasets.All.List_1268938149.html#list-tab-List_1268938149
 
-states_1997 <- read.delim("naics_1997.txt", header = TRUE, sep = ",", dec = ".")
-states_1998 <- read.delim("naics_1998.txt", header = TRUE, sep = ",", dec = ".")
-states_1999 <- read.delim("naics_1999.txt", header = TRUE, sep = ",", dec = ".")
-states_2000 <- read.delim("naics_2000.txt", header = TRUE, sep = ",", dec = ".")
-states_2001 <- read.delim("naics_2001.txt", header = TRUE, sep = ",", dec = ".")
-states_2002 <- read.delim("naics_2002.txt", header = TRUE, sep = ",", dec = ".")
-states_2003 <- read.delim("naics_2003.txt", header = TRUE, sep = ",", dec = ".")
-states_2004 <- read.delim("naics_2004.txt", header = TRUE, sep = ",", dec = ".")
-states_2005 <- read.delim("naics_2005.txt", header = TRUE, sep = ",", dec = ".")
-states_2006 <- read.delim("naics_2006.txt", header = TRUE, sep = ",", dec = ".")
-states_2007 <- read.delim("naics_2007.txt", header = TRUE, sep = ",", dec = ".")
-states_2008 <- read.delim("naics_2008.txt", header = TRUE, sep = ",", dec = ".")
-states_2009 <- read.delim("naics_2009.txt", header = TRUE, sep = ",", dec = ".")
-states_2010 <- read.delim("naics_2010.txt", header = TRUE, sep = ",", dec = ".")
-states_2011 <- read.delim("naics_2011.txt", header = TRUE, sep = ",", dec = ".")
-states_2012 <- read.delim("naics_2012.txt", header = TRUE, sep = ",", dec = ".")
-states_2013 <- read.delim("naics_2013.txt", header = TRUE, sep = ",", dec = ".")
-states_2014 <- read.delim("naics_2014.txt", header = TRUE, sep = ",", dec = ".")
-states_2015 <- read.delim("naics_2015.txt", header = TRUE, sep = ",", dec = ".")
-states_2016 <- read.delim("naics_2016.txt", header = TRUE, sep = ",", dec = ".")
-states_2017 <- read.delim("naics_2017.txt", header = TRUE, sep = ",", dec = ".")
-states_2018 <- read.delim("naics_2018.txt", header = TRUE, sep = ",", dec = ".")
-states_2019 <- read.delim("naics_2019.txt", header = TRUE, sep = ",", dec = ".")
-states_2020 <- read.delim("naics_2020.txt", header = TRUE, sep = ",", dec = ".")
+states_1997 <- read.delim("Data/NAICS_data/naics_1997.txt", header = TRUE, sep = ",", dec = ".")
+states_1998 <- read.delim("Data/NAICS_data/naics_1998.txt", header = TRUE, sep = ",", dec = ".")
+states_1999 <- read.delim("Data/NAICS_data/naics_1999.txt", header = TRUE, sep = ",", dec = ".")
+states_2000 <- read.delim("Data/NAICS_data/naics_2000.txt", header = TRUE, sep = ",", dec = ".")
+states_2001 <- read.delim("Data/NAICS_data/naics_2001.txt", header = TRUE, sep = ",", dec = ".")
+states_2002 <- read.delim("Data/NAICS_data/naics_2002.txt", header = TRUE, sep = ",", dec = ".")
+states_2003 <- read.delim("Data/NAICS_data/naics_2003.txt", header = TRUE, sep = ",", dec = ".")
+states_2004 <- read.delim("Data/NAICS_data/naics_2004.txt", header = TRUE, sep = ",", dec = ".")
+states_2005 <- read.delim("Data/NAICS_data/naics_2005.txt", header = TRUE, sep = ",", dec = ".")
+states_2006 <- read.delim("Data/NAICS_data/naics_2006.txt", header = TRUE, sep = ",", dec = ".")
+states_2007 <- read.delim("Data/NAICS_data/naics_2007.txt", header = TRUE, sep = ",", dec = ".")
+states_2008 <- read.delim("Data/NAICS_data/naics_2008.txt", header = TRUE, sep = ",", dec = ".")
+states_2009 <- read.delim("Data/NAICS_data/naics_2009.txt", header = TRUE, sep = ",", dec = ".")
+states_2010 <- read.delim("Data/NAICS_data/naics_2010.txt", header = TRUE, sep = ",", dec = ".")
+states_2011 <- read.delim("Data/NAICS_data/naics_2011.txt", header = TRUE, sep = ",", dec = ".")
+states_2012 <- read.delim("Data/NAICS_data/naics_2012.txt", header = TRUE, sep = ",", dec = ".")
+states_2013 <- read.delim("Data/NAICS_data/naics_2013.txt", header = TRUE, sep = ",", dec = ".")
+states_2014 <- read.delim("Data/NAICS_data/naics_2014.txt", header = TRUE, sep = ",", dec = ".")
+states_2015 <- read.delim("Data/NAICS_data/naics_2015.txt", header = TRUE, sep = ",", dec = ".")
+states_2016 <- read.delim("Data/NAICS_data/naics_2016.txt", header = TRUE, sep = ",", dec = ".")
+states_2017 <- read.delim("Data/NAICS_data/naics_2017.txt", header = TRUE, sep = ",", dec = ".")
+states_2018 <- read.delim("Data/NAICS_data/naics_2018.txt", header = TRUE, sep = ",", dec = ".")
+states_2019 <- read.delim("Data/NAICS_data/naics_2019.txt", header = TRUE, sep = ",", dec = ".")
+states_2020 <- read.delim("Data/NAICS_data/naics_2020.txt", header = TRUE, sep = ",", dec = ".")
 
 
 # import business size amounts per state
@@ -257,19 +255,34 @@ firm_data2 <- firm_data %>%
 # These are the "NGSP" series, where the first two letters of each csv are the 
 # state abbreviation and the last four letters are "NGSP"
 
-state_files <- c("AKNGSP.csv", "ALNGSP.csv", "ARNGSP.csv", "AZNGSP.csv",
-                 "CANGSP.csv", "CONGSP.csv", "CTNGSP.csv", "DCNGSP.csv",
-                 "DENGSP.csv", "FLNGSP.csv", "GANGSP.csv", "HINGSP.csv",
-                 "IANGSP.csv", "IDNGSP.csv", "ILNGSP.csv", "INNGSP.csv",
-                 "KSNGSP.csv", "KYNGSP.csv", "LANGSP.csv", "MANGSP.csv",
-                 "MDNGSP.csv", "MENGSP.csv", "MINGSP.csv", "MNNGSP.csv",
-                 "MONGSP.csv", "MSNGSP.csv", "MTNGSP.csv", "NCNGSP.csv",
-                 "NDNGSP.csv", "NENGSP.csv", "NHNGSP.csv", "NJNGSP.csv",
-                 "NMNGSP.csv", "NVNGSP.csv", "NYNGSP.csv", "OHNGSP.csv",
-                 "OKNGSP.csv", "ORNGSP.csv", "PANGSP.csv", "RINGSP.csv",
-                 "SCNGSP.csv", "SDNGSP.csv", "TNNGSP.csv", "TXNGSP.csv",
-                 "UTNGSP.csv", "VANGSP.csv", "VTNGSP.csv", "WANGSP.csv",
-                 "WINGSP.csv", "WVNGSP.csv", "WYNGSP.csv")
+
+
+state_files <- c("Data/State_GDP/AKNGSP.csv", "Data/State_GDP/ALNGSP.csv", 
+                 "Data/State_GDP/ARNGSP.csv", "Data/State_GDP/AZNGSP.csv",
+                 "Data/State_GDP/CANGSP.csv", "Data/State_GDP/CONGSP.csv", 
+                 "Data/State_GDP/CTNGSP.csv", "Data/State_GDP/DCNGSP.csv",
+                 "Data/State_GDP/DENGSP.csv", "Data/State_GDP/FLNGSP.csv", 
+                 "Data/State_GDP/GANGSP.csv", "Data/State_GDP/HINGSP.csv",
+                 "Data/State_GDP/IANGSP.csv", "Data/State_GDP/IDNGSP.csv", 
+                 "Data/State_GDP/ILNGSP.csv", "Data/State_GDP/INNGSP.csv",
+                 "Data/State_GDP/KSNGSP.csv", "Data/State_GDP/KYNGSP.csv", 
+                 "Data/State_GDP/LANGSP.csv", "Data/State_GDP/MANGSP.csv",
+                 "Data/State_GDP/MDNGSP.csv", "Data/State_GDP/MENGSP.csv", 
+                 "Data/State_GDP/MINGSP.csv", "Data/State_GDP/MNNGSP.csv",
+                 "Data/State_GDP/MONGSP.csv", "Data/State_GDP/MSNGSP.csv", 
+                 "Data/State_GDP/MTNGSP.csv", "Data/State_GDP/NCNGSP.csv",
+                 "Data/State_GDP/NDNGSP.csv", "Data/State_GDP/NENGSP.csv", 
+                 "Data/State_GDP/NHNGSP.csv", "Data/State_GDP/NJNGSP.csv",
+                 "Data/State_GDP/NMNGSP.csv", "Data/State_GDP/NVNGSP.csv", 
+                 "Data/State_GDP/NYNGSP.csv", "Data/State_GDP/OHNGSP.csv",
+                 "Data/State_GDP/OKNGSP.csv", "Data/State_GDP/ORNGSP.csv", 
+                 "Data/State_GDP/PANGSP.csv", "Data/State_GDP/RINGSP.csv",
+                 "Data/State_GDP/SCNGSP.csv", "Data/State_GDP/SDNGSP.csv", 
+                 "Data/State_GDP/TNNGSP.csv", "Data/State_GDP/TXNGSP.csv",
+                 "Data/State_GDP/UTNGSP.csv", "Data/State_GDP/VANGSP.csv", 
+                 "Data/State_GDP/VTNGSP.csv", "Data/State_GDP/WANGSP.csv",
+                 "Data/State_GDP/WINGSP.csv", "Data/State_GDP/WVNGSP.csv", 
+                 "Data/State_GDP/WYNGSP.csv")
 
 state_names <- c("Alaska", "Alabama", "Arkansas", "Arizona",
                  "California", "Colorado", "Connecticut", "District of Columbia",
@@ -332,38 +345,41 @@ test <- effort_data %>%
 
 # ---- Main Analysis ----
 
-fe_perc5 <- summary(plm(perc_diff ~ less_than5,
-                       data = effort_data, model = "within", index = c("STATEDSCR", "year")))
+options(scipen = 999)
 
-fe_perc9 <- summary(plm(perc_diff ~ five_to9,
-                        data = effort_data, model = "within", index = c("STATEDSCR", "year")))
+less_than5 <- plm(perc_diff ~ less_than5,
+                  data = effort_data, model = "within", index = c("STATEDSCR", "year"))
 
-fe_perc19 <- summary(plm(perc_diff ~ ten_to19,
-                        data = effort_data, model = "within", index = c("STATEDSCR", "year")))
+five_to9 <- plm(perc_diff ~ five_to9,
+                data = effort_data, model = "within", index = c("STATEDSCR", "year"))
 
-fe_perc99 <- summary(plm(perc_diff ~ twenty_to99,
-                        data = effort_data, model = "within", index = c("STATEDSCR", "year")))
+ten_to19 <- plm(perc_diff ~ ten_to19,
+                data = effort_data, model = "within", index = c("STATEDSCR", "year"))
 
-fe_perc499 <- summary(plm(perc_diff ~ hundred_to499,
-                         data = effort_data, model = "within", index = c("STATEDSCR", "year")))
+twenty_to99 <- plm(perc_diff ~ twenty_to99,
+                   data = effort_data, model = "within", index = c("STATEDSCR", "year"))
 
-fe_perc500 <- summary(plm(perc_diff ~ more_than500,
-                        data = effort_data, model = "within", index = c("STATEDSCR", "year")))
+hundred_to499 <- plm(perc_diff ~ hundred_to499,
+                     data = effort_data, model = "within", index = c("STATEDSCR", "year"))
 
-fe_results <- c("fe_perc5", "fe_perc9", "fe_perc19", "fe_perc99", "fe_perc499", "fe_perc500")
+more_than500 <- plm(perc_diff ~ more_than500,
+                    data = effort_data, model = "within", index = c("STATEDSCR", "year"))
 
+fe_results <- c("less_than5", "five_to9", "ten_to19", "twenty_to99", "hundred_to499", "more_than500")
 
 for(i in fe_results){
   
-  assign(i, as.data.frame(coef(get(i))) %>%
+  assign(i, as.data.frame(coef(summary(get(i)))) %>%
            mutate(variable = rownames(.)) %>%
            dplyr::select(variable, "Estimate", "Std. Error", "Pr(>|t|)") %>%
            rename(p_est = "Pr(>|t|)") %>%
-           pivot_longer(cols = c("Estimate", "Std. Error", "p_est"), 
+           mutate(rsq = round(r.squared(get(i)), digits = 4)) %>%
+           pivot_longer(cols = c("Estimate", "Std. Error", "p_est", "rsq"), 
                         names_to = "statistic", values_to = "number") %>%
            mutate(number = as.numeric(number),
                   number = ifelse(statistic == "Estimate", round(number, digits = 2), number),
-                  number = ifelse(statistic == "Std. Error", paste0("(", round(number, digits = 2), ") "), number)) %>%
+                  number = ifelse(statistic == "Std. Error", paste0("(", round(number, digits = 2), ") "), number),
+           ) %>%
            pivot_wider(names_from = statistic, values_from = number) %>% 
            mutate(p_est = as.numeric(p_est),
                   p_value = case_when(p_est < 0.001 ~ "***",
@@ -372,15 +388,24 @@ for(i in fe_results){
                                       p_est < 0.1 & p_est >= 0.05 ~ "`",
                                       p_est > 0.1 ~ ""),
                   Estimate = paste0(Estimate, p_value)) %>%
-           pivot_longer(cols = c("Estimate", "Std. Error"), 
+           pivot_longer(cols = c("Estimate", "Std. Error", "rsq"), 
                         names_to = "statistic", values_to = "number") %>%
+           add_row(variable = NA, number = i, .before = 1) %>%
            dplyr::select(variable, number))
+  
+  
   
 }
 
 
+table <- cbind.data.frame(less_than5, five_to9, ten_to19, twenty_to99, hundred_to499, more_than500)[,c(2, 4, 6, 8, 10, 12)]
+table_header <- table
+colnames(table_header) <- table[1,]
+table_numbers <- table_header[-1,]
 
+variables <- c("Percentage Change in GDP", NA, "R-squared")
 
+table1 <- cbind(variables, table_numbers)
 
 
 
