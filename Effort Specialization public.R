@@ -1,7 +1,7 @@
 ## Effort Specialization Analysis
 
 ## load programs
-pacman::p_load(rio, tidyverse, stringr, haven, reshape2, grid, gridExtra, dplyr, ggplot2, epiDisplay, readxl, multcomp, plm)
+pacman::p_load(rio, tidyverse, stringr, haven, reshape2, grid, gridExtra, dplyr, ggplot2, epiDisplay, readxl, multcomp, plm, utils)
 
 # ---- Load and Clean Data ----
 
@@ -33,6 +33,7 @@ states_2017 <- read.delim("Data/NAICS_data/naics_2017.txt", header = TRUE, sep =
 states_2018 <- read.delim("Data/NAICS_data/naics_2018.txt", header = TRUE, sep = ",", dec = ".")
 states_2019 <- read.delim("Data/NAICS_data/naics_2019.txt", header = TRUE, sep = ",", dec = ".")
 states_2020 <- read.delim("Data/NAICS_data/naics_2020.txt", header = TRUE, sep = ",", dec = ".")
+states_2021 <- read.delim("Data/NAICS_data/naics_2021.txt", header = TRUE, sep = ",", dec = ".")
 
 
 # import business size amounts per state
@@ -40,7 +41,9 @@ states_2020 <- read.delim("Data/NAICS_data/naics_2020.txt", header = TRUE, sep =
 # this allows the size variables to be identified and then labeled with consistent names
 # the output of the loops are dataframes with the number of businesses of size categories for each state
 
-thru01_years <- c("states_1997", "states_1998", "states_1999", "states_2000",
+only_1997 <- c("states_1997")
+
+thru01_years <- c("states_1998", "states_1999", "states_2000",
                  "states_2001")
 
 thru04_years <- c("states_2002", "states_2003", "states_2004")
@@ -56,7 +59,28 @@ thru18_years <- c("states_2017", "states_2018")
 
 thru18_years <- c("states_2017", "states_2018")
 
-thru20_years <- c("states_2019", "states_2020")
+thru21_years <- c("states_2019", "states_2020", "states_2021")
+
+for(i in only_1997){
+  dat <- get(i)
+  
+  a <- dat %>%
+    filter(ENTRSIZE == 1 | ENTRSIZE == 2 | ENTRSIZE == 3 | ENTRSIZE == 4 | 
+             ENTRSIZE == 5 | ENTRSIZE == 9 | ENTRSIZE == 26 | ENTRSIZE == 28) %>%
+    filter(SICDSCR != "TOTAL OVER ALL INDUSTRIES") %>%
+    mutate(ENTRSIZEDSCR = ifelse(ENTRSIZEDSCR == "0 employees", "1-4 employees", as.character(ENTRSIZEDSCR)),
+           ENTRSIZE = ifelse(ENTRSIZE == 2, 3, ENTRSIZE),
+           ENTRSIZEDSCR = factor(ENTRSIZEDSCR,
+                                 levels = c("Total", "1-4 employees", "5-9 employees",
+                                            "10-19 employees", "20-99 employees",
+                                            "100-499 employees", "500 + employees"),
+                                 labels = c("Total", "<5 employees", "5-9 employees",
+                                            "10-19 employees", "20-99 employees",
+                                            "100-499 employees", "500+ employees")))
+  
+  assign(i, a)
+  
+}
 
 for(i in thru01_years){
   dat <- get(i)
@@ -64,6 +88,7 @@ for(i in thru01_years){
   a <- dat %>%
     filter(ENTRSIZE == 1 | ENTRSIZE == 2 | ENTRSIZE == 3 | ENTRSIZE == 4 | 
              ENTRSIZE == 5 | ENTRSIZE == 9 | ENTRSIZE == 26 | ENTRSIZE == 28) %>%
+    filter(NAICSDSCR != "Total") %>%
     mutate(ENTRSIZEDSCR = ifelse(ENTRSIZEDSCR == "0 employees", "1-4 employees", as.character(ENTRSIZEDSCR)),
            ENTRSIZE = ifelse(ENTRSIZE == 2, 3, ENTRSIZE),
            ENTRSIZEDSCR = factor(ENTRSIZEDSCR,
@@ -84,6 +109,7 @@ for(i in thru04_years){
   a <- dat %>%
     filter(ENTRSIZE == 1 | ENTRSIZE == 2 | ENTRSIZE == 3 | ENTRSIZE == 4 | ENTRSIZE == 5 | 
              ENTRSIZE == 7 | ENTRSIZE == 8 | ENTRSIZE == 10) %>%
+    filter(NAICSDSCR != "Total") %>%
     mutate(ENTRSIZEDSCR = ifelse(ENTRSIZEDSCR == "0 employees", "1-4 employees", as.character(ENTRSIZEDSCR)),
            ENTRSIZE = ifelse(ENTRSIZE == 2, 3, ENTRSIZE),
            ENTRSIZEDSCR = factor(ENTRSIZEDSCR,
@@ -104,6 +130,7 @@ for(i in thru06_years){
   a <- dat %>%
     filter(ENTRSIZE == 1 | ENTRSIZE == 2 | ENTRSIZE == 3 | ENTRSIZE == 4 | 
              ENTRSIZE == 6 | ENTRSIZE == 7 | ENTRSIZE == 9) %>%
+    filter(NAICSDSCR != "Total") %>%
     mutate(ENTRSIZEDSCR = factor(ENTRSIZEDSCR,
                                  levels = c("Total", "0-4 employees", "5-9 employees",
                                             "10-19 employees", "20-99 employees",
@@ -122,6 +149,7 @@ for(i in thru12_years){
   a <- dat %>%
     filter(ENTRSIZE == 1 | ENTRSIZE == 2 | ENTRSIZE == 3 | ENTRSIZE == 4 | 
              ENTRSIZE == 6 | ENTRSIZE == 7 | ENTRSIZE == 9) %>%
+    filter(NAICSDSCR != "Total") %>%
     mutate(ENTRSIZEDSCR = factor(ENTRSIZEDSCR,
                                  levels = c("Total", "0-4", "5-9",
                                             "10-19", "20-99",
@@ -140,6 +168,7 @@ for(i in thru16_years){
   a <- dat %>%
     filter(ENTRSIZE == 1 | ENTRSIZE == 2 | ENTRSIZE == 3 | ENTRSIZE == 4 | 
              ENTRSIZE == 6 | ENTRSIZE == 7 | ENTRSIZE == 9) %>%
+    filter(NAICSDSCR != "Total") %>%
     mutate(ENTRSIZEDSCR = factor(ENTRSIZEDSCR,
                                  levels = c("01:  Total", "02:  0-4", "03:  5-9",
                                             "04:  10-19", "06:  20-99",
@@ -158,6 +187,7 @@ for(i in thru18_years){
   a <- dat %>%
     filter(ENTRSIZE == 1 | ENTRSIZE == 2 | ENTRSIZE == 3 | ENTRSIZE == 4 | 
              ENTRSIZE == 6 | ENTRSIZE == 7 | ENTRSIZE == 9) %>%
+    filter(NAICSDSCR != "Total") %>%
     mutate(ENTRSIZEDSCR = factor(ENTRSIZEDSCR,
                                  levels = c("01: Total", "02: <5", "03: 5-9",
                                             "04: 10-19", "06: 20-99",
@@ -170,12 +200,13 @@ for(i in thru18_years){
   
 }
 
-for(i in thru20_years){
+for(i in thru21_years){
   dat <- get(i)
   
   a <- dat %>%
     filter(ENTRSIZE == 1 | ENTRSIZE == 2 | ENTRSIZE == 3 | ENTRSIZE == 26 | 
              ENTRSIZE == 34 | ENTRSIZE == 35 | ENTRSIZE == 36) %>%
+    filter(NAICSDSCR != "Total") %>%
     mutate(ENTRSIZEDSCR = factor(ENTRSIZEDSCR,
                                  levels = c("01: Total", "02: <5", "03: 5-9",
                                             "04: 10-19", "06: 20-99",
@@ -207,7 +238,8 @@ state_years <- c("states_1997", "states_1998", "states_1999", "states_2000",
                  "states_2005", "states_2006", "states_2007", "states_2008",
                  "states_2009", "states_2010", "states_2011", "states_2012",
                  "states_2013", "states_2014", "states_2015", "states_2016",
-                 "states_2017", "states_2018", "states_2019")
+                 "states_2017", "states_2018", "states_2019", "states_2020",
+                 "states_2021")
 
 for(i in state_years){
   dat <- get(i)
@@ -215,6 +247,7 @@ for(i in state_years){
   
   biz_data1 <- dat %>%
     filter(STATE != 0) %>%
+    filter(ENTRSIZEDSCR != "Total") %>%
     group_by(STATEDSCR, ENTRSIZEDSCR) %>%
     summarize(firms = sum(FIRM)) %>%
     ungroup()
@@ -303,27 +336,29 @@ gdp_data <- data.frame(
   GDP = NA,
   STATEDSCR = NA,
   year_diff = NA,
-  year_diff2 = NA,
+  perc_diff_prime = NA,
   perc_diff = NA)
 
 for(i in 1:length(state_files)) {
   dat <- 
          import(state_files[i]) %>%
-           rename("GDP" = substr(state_files[i], 1, 6),
+           rename("GDP" = substr(state_files[i], 16, 21),
                   "year" = "DATE") %>%
            mutate(STATEDSCR = state_names[i],
                   year = substr(year, 1, 4),
-                  year_diff = ifelse(year == 2019, NA, diff(GDP, lag = 1)),
-                  year_diff2 = dplyr::lag(year_diff),
-                  perc_diff = ifelse(year == 1997, NA, (year_diff2/GDP)*100))
+                  year_diff = ifelse(year == 2020, NA, diff(GDP, lag = 1)),
+                  perc_diff_prime = ifelse(year == 2020, NA, (year_diff/GDP)*100),
+                  perc_diff = dplyr::lag(perc_diff_prime))
   
   gdp_data <- rbind.data.frame(gdp_data, dat)
   
 }
 
+
 gdp_data <- gdp_data %>%
   mutate(year = as.numeric(year)) %>%
-  filter(!is.na(STATEDSCR))
+  filter(!is.na(STATEDSCR),
+         year < 2022)
 
 # create effort_data dataframe by merging firm data and GDP data
 
@@ -342,6 +377,7 @@ test <- effort_data %>%
   mutate(total = less_than5 + five_to9 + ten_to19 + twenty_to99 +
            hundred_to499 + more_than500) %>%
   summarize(test = mean(total)) 
+
 
 # ---- Main Analysis ----
 
@@ -364,6 +400,7 @@ hundred_to499 <- plm(perc_diff ~ hundred_to499,
 
 more_than500 <- plm(perc_diff ~ more_than500,
                     data = effort_data, model = "within", index = c("STATEDSCR", "year"))
+
 
 fe_results <- c("less_than5", "five_to9", "ten_to19", "twenty_to99", "hundred_to499", "more_than500")
 
