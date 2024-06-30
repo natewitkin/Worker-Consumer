@@ -1,7 +1,7 @@
 ## Effort Specialization Analysis
 
 ## load programs
-pacman::p_load(rio, tidyverse, stringr, haven, reshape2, grid, gridExtra, dplyr, ggplot2, epiDisplay, readxl, multcomp, plm, utils)
+pacman::p_load(rio, tidyverse, stringr, haven, reshape2, grid, gridExtra, dplyr, ggplot2, epiDisplay, readxl, multcomp, plm, utils, openxlsx)
 
 # ---- Load and Clean Data ----
 
@@ -331,7 +331,8 @@ state_names <- c("Alaska", "Alabama", "Arkansas", "Arizona",
                  "Utah", "Virginia", "Vermont", "Washington",
                  "Wisconsin", "West Virginia", "Wyoming")
 
-gdp_data <- data.frame(
+
+gdp_data_1 <- data.frame(
   year = NA,
   GDP = NA,
   STATEDSCR = NA,
@@ -346,23 +347,55 @@ for(i in 1:length(state_files)) {
                   "year" = "DATE") %>%
            mutate(STATEDSCR = state_names[i],
                   year = substr(year, 1, 4),
-                  year_diff = ifelse(year == 2020, NA, diff(GDP, lag = 1)),
-                  perc_diff_prime = ifelse(year == 2020, NA, (year_diff/GDP)*100),
+                  year_diff = ifelse(year == 2023, NA, diff(GDP, lag = 1)),
+                  perc_diff_prime = ifelse(year == 2023, NA, (year_diff/GDP)*100),
                   perc_diff = dplyr::lag(perc_diff_prime))
   
-  gdp_data <- rbind.data.frame(gdp_data, dat)
+  gdp_data_1 <- rbind.data.frame(gdp_data_1, dat)
   
 }
 
+# adjustments for inflation
 
-gdp_data <- gdp_data %>%
-  mutate(year = as.numeric(year)) %>%
-  filter(!is.na(STATEDSCR),
-         year < 2022)
+# Using CPI data downloaded from the Federal Reserve Economic Data
+# Averaging CPI for each year in comparing CPI across years
+
+inflation_data <- read.csv("Data/CPIAUCSL.csv")
+
+inflation <- inflation_data %>%
+  mutate(year = as.numeric(substr(inflation_data$DATE, 1, 4))) %>%
+  group_by(year) %>%
+  summarize(CPI_year = mean(CPIAUCSL)) %>%
+  ungroup()
+
+inflation_2019 <- inflation %>%
+  filter(year < 2020) %>%
+  mutate(maxyear = max(CPI_year),
+         infl_2019 = maxyear/CPI_year)
+
+inflation_2021 <- inflation %>%
+  filter(year < 2022) %>%
+  mutate(maxyear = max(CPI_year),
+         infl_2019 = maxyear/CPI_year)
+
+gdp_data_to2019 <- merge(gdp_data_1, inflation_2019, by = "year") %>%
+  arrange(STATEDSCR) %>%
+  mutate(realGDP = GDP * infl_2019,
+         year_realdiff = ifelse(year == 2019, NA, diff(realGDP, lag = 1)),
+         perc_realdiff_prime = ifelse(year == 2019, NA, (year_realdiff/realGDP)*100),
+         perc_realdiff = dplyr::lag(perc_realdiff_prime))
+
+gdp_data_to2021 <- merge(gdp_data_1, inflation_2021, by = "year") %>%
+  arrange(STATEDSCR) %>%
+  mutate(realGDP = GDP * infl_2019,
+         year_realdiff = ifelse(year == 2021, NA, diff(realGDP, lag = 1)),
+         perc_realdiff_prime = ifelse(year == 2021, NA, (year_realdiff/realGDP)*100),
+         perc_realdiff = dplyr::lag(perc_realdiff_prime))
+
 
 # create effort_data dataframe by merging firm data and GDP data
 
-effort_data <- merge(firm_data2, gdp_data, by = c("STATEDSCR", "year")) %>%
+effort_data_to2019 <- merge(firm_data2, gdp_data_to2019, by = c("STATEDSCR", "year")) %>%
   rename("less_than5" = "<5 employees",
          "five_to9" = "5-9 employees",
          "ten_to19" = "10-19 employees",
@@ -373,33 +406,40 @@ effort_data <- merge(firm_data2, gdp_data, by = c("STATEDSCR", "year")) %>%
   mutate(year_fact = factor(year, ordered = T)) %>%
   ungroup()
 
-test <- effort_data %>%
-  mutate(total = less_than5 + five_to9 + ten_to19 + twenty_to99 +
-           hundred_to499 + more_than500) %>%
-  summarize(test = mean(total)) 
+effort_data_to2021 <- merge(firm_data2, gdp_data_to2021, by = c("STATEDSCR", "year")) %>%
+  rename("less_than5" = "<5 employees",
+         "five_to9" = "5-9 employees",
+         "ten_to19" = "10-19 employees",
+         "twenty_to99" = "20-99 employees",
+         "hundred_to499" = "100-499 employees",
+         "more_than500" = "500+ employees") %>%
+  group_by(STATEDSCR) %>%
+  mutate(year_fact = factor(year, ordered = T)) %>%
+  ungroup()
 
 
-# ---- Main Analysis ----
+
+# ---- Main Analysis to 2019 no inflation ----
 
 options(scipen = 999)
 
 less_than5 <- plm(perc_diff ~ less_than5,
-                  data = effort_data, model = "within", index = c("STATEDSCR", "year"))
+                  data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
 
 five_to9 <- plm(perc_diff ~ five_to9,
-                data = effort_data, model = "within", index = c("STATEDSCR", "year"))
+                data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
 
 ten_to19 <- plm(perc_diff ~ ten_to19,
-                data = effort_data, model = "within", index = c("STATEDSCR", "year"))
+                data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
 
 twenty_to99 <- plm(perc_diff ~ twenty_to99,
-                   data = effort_data, model = "within", index = c("STATEDSCR", "year"))
+                   data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
 
 hundred_to499 <- plm(perc_diff ~ hundred_to499,
-                     data = effort_data, model = "within", index = c("STATEDSCR", "year"))
+                     data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
 
 more_than500 <- plm(perc_diff ~ more_than500,
-                    data = effort_data, model = "within", index = c("STATEDSCR", "year"))
+                    data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
 
 
 fe_results <- c("less_than5", "five_to9", "ten_to19", "twenty_to99", "hundred_to499", "more_than500")
@@ -444,7 +484,209 @@ variables <- c("Percentage Change in GDP", NA, "R-squared")
 
 table1 <- cbind(variables, table_numbers)
 
+write.xlsx(table1, "FE_to2019.xlsx")
 
+
+# ---- Main Analysis to 2021 no inflation ----
+
+options(scipen = 999)
+
+less_than5 <- plm(perc_diff ~ less_than5,
+                  data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+five_to9 <- plm(perc_diff ~ five_to9,
+                data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+ten_to19 <- plm(perc_diff ~ ten_to19,
+                data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+twenty_to99 <- plm(perc_diff ~ twenty_to99,
+                   data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+hundred_to499 <- plm(perc_diff ~ hundred_to499,
+                     data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+more_than500 <- plm(perc_diff ~ more_than500,
+                    data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+
+fe_results <- c("less_than5", "five_to9", "ten_to19", "twenty_to99", "hundred_to499", "more_than500")
+
+for(i in fe_results){
+  
+  assign(i, as.data.frame(coef(summary(get(i)))) %>%
+           mutate(variable = rownames(.)) %>%
+           dplyr::select(variable, "Estimate", "Std. Error", "Pr(>|t|)") %>%
+           rename(p_est = "Pr(>|t|)") %>%
+           mutate(rsq = round(r.squared(get(i)), digits = 4)) %>%
+           pivot_longer(cols = c("Estimate", "Std. Error", "p_est", "rsq"), 
+                        names_to = "statistic", values_to = "number") %>%
+           mutate(number = as.numeric(number),
+                  number = ifelse(statistic == "Estimate", round(number, digits = 2), number),
+                  number = ifelse(statistic == "Std. Error", paste0("(", round(number, digits = 2), ") "), number),
+           ) %>%
+           pivot_wider(names_from = statistic, values_from = number) %>% 
+           mutate(p_est = as.numeric(p_est),
+                  p_value = case_when(p_est < 0.001 ~ "***",
+                                      p_est < 0.01 & p_est >= 0.001 ~ "**",
+                                      p_est < 0.05 & p_est >= 0.01 ~ "*",
+                                      p_est < 0.1 & p_est >= 0.05 ~ "`",
+                                      p_est > 0.1 ~ ""),
+                  Estimate = paste0(Estimate, p_value)) %>%
+           pivot_longer(cols = c("Estimate", "Std. Error", "rsq"), 
+                        names_to = "statistic", values_to = "number") %>%
+           add_row(variable = NA, number = i, .before = 1) %>%
+           dplyr::select(variable, number))
+  
+  
+  
+}
+
+
+table <- cbind.data.frame(less_than5, five_to9, ten_to19, twenty_to99, hundred_to499, more_than500)[,c(2, 4, 6, 8, 10, 12)]
+table_header <- table
+colnames(table_header) <- table[1,]
+table_numbers <- table_header[-1,]
+
+variables <- c("Percentage Change in GDP", NA, "R-squared")
+
+table2 <- cbind(variables, table_numbers)
+
+write.xlsx(table2, "FE_to2021.xlsx")
+
+# ---- Main Analysis to 2019, inflation-adjusted ----
+
+options(scipen = 999)
+
+less_than5 <- plm(perc_realdiff ~ less_than5,
+                  data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
+
+five_to9 <- plm(perc_realdiff ~ five_to9,
+                data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
+
+ten_to19 <- plm(perc_realdiff ~ ten_to19,
+                data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
+
+twenty_to99 <- plm(perc_realdiff ~ twenty_to99,
+                   data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
+
+hundred_to499 <- plm(perc_realdiff ~ hundred_to499,
+                     data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
+
+more_than500 <- plm(perc_realdiff ~ more_than500,
+                    data = effort_data_to2019, model = "within", index = c("STATEDSCR", "year"))
+
+
+fe_results <- c("less_than5", "five_to9", "ten_to19", "twenty_to99", "hundred_to499", "more_than500")
+
+for(i in fe_results){
+  
+  assign(i, as.data.frame(coef(summary(get(i)))) %>%
+           mutate(variable = rownames(.)) %>%
+           dplyr::select(variable, "Estimate", "Std. Error", "Pr(>|t|)") %>%
+           rename(p_est = "Pr(>|t|)") %>%
+           mutate(rsq = round(r.squared(get(i)), digits = 4)) %>%
+           pivot_longer(cols = c("Estimate", "Std. Error", "p_est", "rsq"), 
+                        names_to = "statistic", values_to = "number") %>%
+           mutate(number = as.numeric(number),
+                  number = ifelse(statistic == "Estimate", round(number, digits = 2), number),
+                  number = ifelse(statistic == "Std. Error", paste0("(", round(number, digits = 2), ") "), number),
+           ) %>%
+           pivot_wider(names_from = statistic, values_from = number) %>% 
+           mutate(p_est = as.numeric(p_est),
+                  p_value = case_when(p_est < 0.001 ~ "***",
+                                      p_est < 0.01 & p_est >= 0.001 ~ "**",
+                                      p_est < 0.05 & p_est >= 0.01 ~ "*",
+                                      p_est < 0.1 & p_est >= 0.05 ~ "`",
+                                      p_est > 0.1 ~ ""),
+                  Estimate = paste0(Estimate, p_value)) %>%
+           pivot_longer(cols = c("Estimate", "Std. Error", "rsq"), 
+                        names_to = "statistic", values_to = "number") %>%
+           add_row(variable = NA, number = i, .before = 1) %>%
+           dplyr::select(variable, number))
+  
+  
+  
+}
+
+
+table <- cbind.data.frame(less_than5, five_to9, ten_to19, twenty_to99, hundred_to499, more_than500)[,c(2, 4, 6, 8, 10, 12)]
+table_header <- table
+colnames(table_header) <- table[1,]
+table_numbers <- table_header[-1,]
+
+variables <- c("Percentage Change in GDP", NA, "R-squared")
+
+table3 <- cbind(variables, table_numbers)
+
+write.xlsx(table3, "FE_to2019_inflation.xlsx")
+
+# ---- Main Analysis to 2021, inflation-adjusted ----
+
+options(scipen = 999)
+
+less_than5 <- plm(perc_realdiff ~ less_than5,
+                  data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+five_to9 <- plm(perc_realdiff ~ five_to9,
+                data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+ten_to19 <- plm(perc_realdiff ~ ten_to19,
+                data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+twenty_to99 <- plm(perc_realdiff ~ twenty_to99,
+                   data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+hundred_to499 <- plm(perc_realdiff ~ hundred_to499,
+                     data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+more_than500 <- plm(perc_realdiff ~ more_than500,
+                    data = effort_data_to2021, model = "within", index = c("STATEDSCR", "year"))
+
+
+fe_results <- c("less_than5", "five_to9", "ten_to19", "twenty_to99", "hundred_to499", "more_than500")
+
+for(i in fe_results){
+  
+  assign(i, as.data.frame(coef(summary(get(i)))) %>%
+           mutate(variable = rownames(.)) %>%
+           dplyr::select(variable, "Estimate", "Std. Error", "Pr(>|t|)") %>%
+           rename(p_est = "Pr(>|t|)") %>%
+           mutate(rsq = round(r.squared(get(i)), digits = 4)) %>%
+           pivot_longer(cols = c("Estimate", "Std. Error", "p_est", "rsq"), 
+                        names_to = "statistic", values_to = "number") %>%
+           mutate(number = as.numeric(number),
+                  number = ifelse(statistic == "Estimate", round(number, digits = 2), number),
+                  number = ifelse(statistic == "Std. Error", paste0("(", round(number, digits = 2), ") "), number),
+           ) %>%
+           pivot_wider(names_from = statistic, values_from = number) %>% 
+           mutate(p_est = as.numeric(p_est),
+                  p_value = case_when(p_est < 0.001 ~ "***",
+                                      p_est < 0.01 & p_est >= 0.001 ~ "**",
+                                      p_est < 0.05 & p_est >= 0.01 ~ "*",
+                                      p_est < 0.1 & p_est >= 0.05 ~ "`",
+                                      p_est > 0.1 ~ ""),
+                  Estimate = paste0(Estimate, p_value)) %>%
+           pivot_longer(cols = c("Estimate", "Std. Error", "rsq"), 
+                        names_to = "statistic", values_to = "number") %>%
+           add_row(variable = NA, number = i, .before = 1) %>%
+           dplyr::select(variable, number))
+  
+  
+  
+}
+
+
+table <- cbind.data.frame(less_than5, five_to9, ten_to19, twenty_to99, hundred_to499, more_than500)[,c(2, 4, 6, 8, 10, 12)]
+table_header <- table
+colnames(table_header) <- table[1,]
+table_numbers <- table_header[-1,]
+
+variables <- c("Percentage Change in GDP", NA, "R-squared")
+
+table4 <- cbind(variables, table_numbers)
+
+write.xlsx(table4, "FE_to2021_inflation.xlsx")
 
 # ---- Clean Data for Data Visualizations ----
 
